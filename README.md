@@ -16,4 +16,4 @@ Each day's work lives in its own dated folder (`YYYY-MM-DD/`), so the history of
 
 | Date | Summary |
 | --- | --- |
-| 2026-10-19 | EDA, local AI models (how they work and how they differ), LeetCode revision, internship |
+| 2026-10-19 | EDA, local AI models (how they work and how they differ), LeetCode revision, improving Claude project performance with helper index and dictionary files, internship |
