@@ -17,4 +17,4 @@ Each day's work lives in its own dated folder (`YYYY-MM-DD/`), so the history of
 | Date | Summary |
 | --- | --- |
 | 2026-10-19 | EDA, local AI models (how they work and how they differ), LeetCode revision, improving Claude project performance with helper index and dictionary files, internship |
-| 2026-10-22 | How MCP servers work, completed college internship report, DSA basics revision, internship work |
+| 2026-10-22 | How MCP servers work, completed college internship report, DSA basics revision, internship work, working on a new video on Cloudflare Code Mode vs MCP servers |
