@@ -73,3 +73,25 @@ llama-bench -m qwen2.5-0.5b-instruct-q4_k_m.gguf -p 512 -n 128 -t 6 -ngl 0 -r 5 
 5. Refuses to overwrite any existing file (`open(..., "x")`).
 
 **Result:** session `m0_20261025_123707` - 3 JSON files, 3 stderr logs, 1 meta file. All return codes 0; pre-run CPU load was 3.8-16.4%, so the machine was mostly idle. The stderr logs confirm the CPU backend loaded was `ggml-cpu-alderlake.dll`.
+
+---
+
+## Task 4: Analysis script and tests (`scripts/analyze_m0.py`, `tests/`)
+
+**What it does:** reads the raw llama-bench JSON and recomputes statistics from the per-repetition `samples_ts` (tokens/s), rather than trusting the tool's summary.
+
+- **Mean, sample standard deviation (n-1), CV%** (CV = stdev / mean, a unit-free measure of run-to-run noise), min and max.
+- Reported **per process** and **pooled** over all 15 samples, plus the spread of the three process means.
+- **Consistency check:** warns if threads, batch size, KV-cache type, model file, build, etc. differ between rows that are about to be pooled.
+- **Cross-check:** compares its recomputed mean/stdev with llama-bench's own `avg_ts` / `stddev_ts` and warns on a mismatch.
+- For decode only, prints an *assumption-dependent* implied bandwidth (`tok/s x model bytes`), clearly labelled as not a measurement.
+- It deliberately does **not** compare against the predictions; that is the postmortem's job.
+
+**Tests (`pytest`, 5 passing):** use tiny synthetic numbers that can be verified by hand, e.g. samples `1, 2, 3` give mean 2, stdev 1, CV 50%. They also check test naming (`pp512`, `tg128@d2048`), numeric run ordering (`run10` after `run2`), grouping by test, and that a deliberate mismatch is flagged.
+
+**Output on the real session:**
+
+```
+== pp512 ==  pooled n=15  mean 344.45  stdev 15.66  CV 4.55%  range 326.64 - 380.03
+== tg128 ==  pooled n=15  mean  45.42  stdev  1.47  CV 3.23%  range  42.76 -  46.94
+```
