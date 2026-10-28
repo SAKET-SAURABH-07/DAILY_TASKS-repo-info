@@ -95,3 +95,27 @@ llama-bench -m qwen2.5-0.5b-instruct-q4_k_m.gguf -p 512 -n 128 -t 6 -ngl 0 -r 5 
 == pp512 ==  pooled n=15  mean 344.45  stdev 15.66  CV 4.55%  range 326.64 - 380.03
 == tg128 ==  pooled n=15  mean  45.42  stdev  1.47  CV 3.23%  range  42.76 -  46.94
 ```
+
+---
+
+## Task 5: Pre-registered predictions and pinned artifacts (`docs/`)
+
+**Predictions were written on 2026-10-25, before any benchmark run, and the file is never edited afterwards.** Corrections go in a separate `postmortem.md`. This stops me from quietly "predicting" what I already saw.
+
+**The arithmetic behind the main prediction:**
+- Single-channel DDR4-2667 peak = 2667 x 10^6 transfers/s x 8 bytes = **21.3 GB/s**.
+- Decoding one token needs (roughly) one pass over all model weights, so ceiling = 21.3 GB/s / 0.4914 GB = **about 43 tok/s**.
+- Real bandwidth is below peak, so I predicted **25-38 tok/s**.
+
+| # | Prediction | Mechanism expected |
+|---|---|---|
+| 1 | Decode 25-38 tok/s | Weight reads through single-channel DRAM |
+| 2 | Prefill 300-1,000 tok/s | Weights reused across 512 tokens, compute-bound |
+| 3 | Decode CV below 5% | Only OS/background noise |
+| 4 | Decode stops scaling near 4 threads | Memory bandwidth saturates (later experiment) |
+| 5 | Q4_K_M / Q8_0 decode ratio 1.0-1.375 | Fewer bytes, but dequantization costs (later experiment) |
+| 6 | Biggest risk: real DRAM traffic per token differs from file size | Weight repacking, cache reuse |
+
+**Pinned artifacts (`artifact_hashes.txt`):** size, SHA-256 and source URL of the llama.cpp release zip (24,216,651 B) and the model GGUF (491,400,032 B), so anyone can verify they are benchmarking the same bytes. `llama-version_b11871.txt` and `llama-bench-help_b11871.txt` capture the exact tool version and its options.
+
+Large files (`*.gguf`, `models/`, `tools/`, `.venv/`) are excluded by `.gitignore`.
