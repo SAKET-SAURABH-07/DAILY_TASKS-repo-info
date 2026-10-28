@@ -28,3 +28,18 @@ The method is *predict first, measure second, explain the gap*:
 5. Pre-registered predictions + artifact hashes
 6. Results explained, and the interesting miss
 7. Update the main log
+
+---
+
+## Task 2: Environment recording (`scripts/record_env.py`)
+
+**Why:** a benchmark number is meaningless without the machine it came from. Before any run, this script writes a JSON snapshot of the environment, stored beside the results.
+
+**What it captures:** OS and Python version, CPU model/cores/threads (via PowerShell `Win32_Processor`), RAM size plus each memory stick's capacity and speed (`Win32_PhysicalMemory`), the active Windows power plan (`powercfg`), the llama.cpp `--version` output, and the git commit of the repo.
+
+**Design choices worth remembering:**
+- Every probe is best-effort. If one fails, its field stores the error instead of crashing, and a `warnings` list is written at the end.
+- It never assumes things: memory type codes are mapped with a lookup that falls back to "unknown", and stick count is explicitly **not** treated as channel count (one stick means single-channel, but two sticks still need checking against the slot labels).
+- Output files are timestamped and never overwritten: `experiments/env/env_<timestamp>_<label>.json`.
+
+**Result:** 4 snapshots committed (`baseline`, `baseline-llama`, `baseline-llama-clean`, `m0-bench`). The `m0-bench` one belongs to the final benchmark session.
