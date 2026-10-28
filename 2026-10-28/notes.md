@@ -119,3 +119,55 @@ llama-bench -m qwen2.5-0.5b-instruct-q4_k_m.gguf -p 512 -n 128 -t 6 -ngl 0 -r 5 
 **Pinned artifacts (`artifact_hashes.txt`):** size, SHA-256 and source URL of the llama.cpp release zip (24,216,651 B) and the model GGUF (491,400,032 B), so anyone can verify they are benchmarking the same bytes. `llama-version_b11871.txt` and `llama-bench-help_b11871.txt` capture the exact tool version and its options.
 
 Large files (`*.gguf`, `models/`, `tools/`, `.venv/`) are excluded by `.gitignore`.
+
+---
+
+## Task 6: Results explained
+
+Full project README: [`cpu-inference-lab/README.md`](cpu-inference-lab/README.md). Standalone write-up page: [`cpu-inference-lab/docs/index.html`](cpu-inference-lab/docs/index.html).
+
+### Measured (pooled, 15 samples each)
+
+| Test | Measures | Mean tok/s | Stdev | CV |
+|---|---|---:|---:|---:|
+| `pp512` | Prefill: reading a 512-token prompt | **344.5** | 15.7 | 4.55% |
+| `tg128` | Decode: generating 128 tokens | **45.4** | 1.5 | 3.23% |
+
+### Prefill vs decode, in plain words
+
+- **Prefill** processes all prompt tokens together, so each weight loaded from memory is reused for many tokens. It is limited by **compute**, and it is about 7.6x faster per token than decode.
+- **Decode** produces one token at a time, and each token needs the weights again. It is limited by **memory bandwidth**, so it is the number people feel as "typing speed".
+
+### Predictions vs observed
+
+| # | Prediction | Observed | Outcome |
+|---|---|---|---|
+| 1 | Decode 25-38 tok/s | 45.4 | Missed (above range) |
+| 2 | Prefill 300-1,000 tok/s | 344.5 | Hit |
+| 3 | Decode CV below 5% | 3.23% | Hit |
+| 4 | Decode stops scaling ~4 threads | not run | Planned |
+| 5 | Q4_K_M / Q8_0 ratio 1.0-1.375 | not run | Planned |
+
+### The interesting miss
+
+Decode ran **faster than my own bandwidth ceiling** (43 tok/s). If every model byte were read from DRAM once per token, 45.4 tok/s would need `45.42 x 485,452,288 B = 22.05 GB/s`, which is **103% of the 21.3 GB/s theoretical peak**. That is physically impossible, so the assumption "one full model read from DRAM per token" is wrong for this setup.
+
+Candidate reasons (these are hypotheses, **not yet established**):
+- llama.cpp repacks weights at load time (`repack: true` in the raw JSON), which changes the memory layout and access pattern.
+- Some data may be served from CPU cache instead of DRAM.
+- Part of the model (embedding table) is only partially read per token, because a token reads one embedding row, not the whole table.
+- The model's real parameter count (~630M) differs from the "0.5B" in the file name, which hints at a large embedding matrix, so the per-token weight traffic could be smaller than the file size.
+
+The next step is a postmortem (`docs/postmortem.md`) that tests these with a GGUF tensor inspection, and then thread-scaling and Q8_0 experiments.
+
+### What I learned
+
+- A prediction that turns out wrong is the most useful output of the lab.
+- Implied bandwidth is a sanity check on an assumption, not a measurement of DRAM traffic.
+- Keeping raw files and environment snapshots makes every number re-computable.
+
+### Caveats
+
+- One machine only (single-channel RAM, Balanced power plan); do not generalize.
+- 3 processes x 5 reps is a small sample.
+- llama-bench measures the engine directly; Ollama adds its own server layer on top.
