@@ -43,3 +43,33 @@ The method is *predict first, measure second, explain the gap*:
 - Output files are timestamped and never overwritten: `experiments/env/env_<timestamp>_<label>.json`.
 
 **Result:** 4 snapshots committed (`baseline`, `baseline-llama`, `baseline-llama-clean`, `m0-bench`). The `m0-bench` one belongs to the final benchmark session.
+
+---
+
+## Task 3: Benchmark runner and raw results (`scripts/m0_bench.py`)
+
+**The command it runs:**
+
+```
+llama-bench -m qwen2.5-0.5b-instruct-q4_k_m.gguf -p 512 -n 128 -t 6 -ngl 0 -r 5 -o json
+```
+
+| Flag | Meaning |
+|---|---|
+| `-p 512` | **Prefill** test: process a 512-token prompt (`pp512`) |
+| `-n 128` | **Decode** test: generate 128 tokens one at a time (`tg128`) |
+| `-t 6` | 6 threads, one per physical core |
+| `-ngl 0` | 0 layers on GPU, so this is pure CPU |
+| `-r 5` | 5 repetitions inside each process |
+| `-o json` | machine-readable output, with every per-repetition sample |
+
+**Why three separate processes?** Repetitions inside one process share a warm cache and a loaded model. Starting llama-bench three times shows whether results move between fresh starts. Total: 3 processes x 5 reps = 15 samples per test.
+
+**What the runner does:**
+1. `--dry-run` previews the commands and checks that the exe and model exist.
+2. Runs `record_env.py` first.
+3. Before each process, records free RAM and CPU load (so a noisy run can be spotted afterwards).
+4. Saves the **untouched** stdout (JSON) and stderr per run, plus a `_meta.json` with timestamps, wall time and return codes.
+5. Refuses to overwrite any existing file (`open(..., "x")`).
+
+**Result:** session `m0_20261025_123707` - 3 JSON files, 3 stderr logs, 1 meta file. All return codes 0; pre-run CPU load was 3.8-16.4%, so the machine was mostly idle. The stderr logs confirm the CPU backend loaded was `ggml-cpu-alderlake.dll`.
