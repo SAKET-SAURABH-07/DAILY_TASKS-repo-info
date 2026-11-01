@@ -64,3 +64,7 @@ Remember the distinction: PagedAttention manages memory; continuous batching man
 ## The big picture
 
 Running a local LLM is not just about loading a model. It also involves choosing an inference engine, understanding the model file, measuring prompt and generation speed, and managing memory and concurrent requests.
+
+## Next time
+
+Continue from the next section of Chapter 3.
