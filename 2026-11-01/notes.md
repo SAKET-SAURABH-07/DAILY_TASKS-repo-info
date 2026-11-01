@@ -8,3 +8,16 @@
 - A Python script can send a chat request to `http://localhost:11434/api/chat`.
 - We looked at settings like `stream=False`, `temperature=0.2`, and `num_ctx=4096`.
 - We also saw how the response's token counts and durations can be used to calculate generation speed.
+
+## 2. Comparing local inference tools (Section 3.5)
+
+We compared the tools and their main purposes:
+
+| Tool      | Main use                                  |
+| --------- | ----------------------------------------- |
+| Ollama    | Easy local model running and management   |
+| llama.cpp | More control and flexible model execution |
+| LM Studio | GUI-based experimentation                 |
+| vLLM      | High-throughput GPU serving               |
+
+We also discussed how an OpenAI-compatible API can make switching between backends easier.
