@@ -60,3 +60,7 @@ This was the most conceptually important part:
 - **Continuous batching:** lets new requests join and completed requests leave while generation is ongoing, helping keep the GPU busy.
 
 Remember the distinction: PagedAttention manages memory; continuous batching manages how requests are scheduled.
+
+## The big picture
+
+Running a local LLM is not just about loading a model. It also involves choosing an inference engine, understanding the model file, measuring prompt and generation speed, and managing memory and concurrent requests.
