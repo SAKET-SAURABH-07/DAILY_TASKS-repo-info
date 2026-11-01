@@ -40,3 +40,13 @@ GGUF is a model-file format that can bundle:
 - Tokenizer information
 
 The key idea: GGUF is the model's packaged file format, not the inference engine itself.
+
+## 5. Running llama.cpp (Listing 3.6)
+
+The main commands:
+
+- `llama-cli`: chat in the terminal
+- `llama-server`: serve a model through an API
+- `llama-bench`: benchmark prompt processing and token generation
+
+We also unpacked options such as `-m` for the model path, `-c` for context size, and `-ngl 99` for requesting GPU layer offloading where supported.
