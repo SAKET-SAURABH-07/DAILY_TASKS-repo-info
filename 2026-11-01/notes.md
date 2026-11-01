@@ -21,3 +21,12 @@ We compared the tools and their main purposes:
 | vLLM      | High-throughput GPU serving               |
 
 We also discussed how an OpenAI-compatible API can make switching between backends easier.
+
+## 3. Measuring speed (Listing 3.5)
+
+Inference has two distinct speed measurements:
+
+- **Prompt processing (prefill):** processing the input prompt.
+- **Token generation (decode):** generating the response one token at a time.
+
+In the example, the results were 250 prompt tokens/sec and 20 generated tokens/sec. Those values came from the listing's sample response, not a real benchmark.
