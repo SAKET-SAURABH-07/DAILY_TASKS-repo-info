@@ -50,3 +50,13 @@ The main commands:
 - `llama-bench`: benchmark prompt processing and token generation
 
 We also unpacked options such as `-m` for the model path, `-c` for context size, and `-ngl 99` for requesting GPU layer offloading where supported.
+
+## 6. vLLM, PagedAttention, and continuous batching
+
+This was the most conceptually important part:
+
+- **KV cache:** stores attention keys and values from previous tokens so they do not need to be recomputed.
+- **PagedAttention:** manages KV-cache memory in smaller blocks, allocating as needed instead of reserving one large continuous area.
+- **Continuous batching:** lets new requests join and completed requests leave while generation is ongoing, helping keep the GPU busy.
+
+Remember the distinction: PagedAttention manages memory; continuous batching manages how requests are scheduled.
