@@ -30,3 +30,13 @@ Inference has two distinct speed measurements:
 - **Token generation (decode):** generating the response one token at a time.
 
 In the example, the results were 250 prompt tokens/sec and 20 generated tokens/sec. Those values came from the listing's sample response, not a real benchmark.
+
+## 4. GGUF model files (Figure 3.2)
+
+GGUF is a model-file format that can bundle:
+
+- Model weights
+- Configuration and metadata
+- Tokenizer information
+
+The key idea: GGUF is the model's packaged file format, not the inference engine itself.
